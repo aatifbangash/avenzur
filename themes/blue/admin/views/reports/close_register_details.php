@@ -225,14 +225,14 @@ $registerIdsJson = '';
                 <tr>
                       <td style="border-bottom: 1px solid #EEE;"><h4><?= lang('total_sales'); ?>:</h4></td>
                     <td style="text-align:right;border-bottom: 1px solid #EEE;"><h4>
-                            <span><?=  $total_sale; ?></span>
+                            <span><?= $this->sma->formatAmount($total_sale); ?></span>
                         </h4></td>
                 </tr>
 
                 <tr>
                       <td style="border-bottom: 1px solid #EEE;"><h4><?= lang('total_sales_with_halala'); ?>:</h4></td>
                     <td style="text-align:right;border-bottom: 1px solid #EEE;"><h4>
-                            <span><?=  $total_sale_with_halala; ?></span>
+                            <span><?= $this->sma->formatAmount($total_sale_with_halala); ?></span>
                         </h4></td>
                 </tr>
 
@@ -262,7 +262,7 @@ $registerIdsJson = '';
                 <tr>
                       <td style="border-bottom: 1px solid #EEE;"><h4><?= lang('Total Invoice Qty'); ?>:</h4></td>
                     <td style="text-align:right;border-bottom: 1px solid #EEE;"><h4>
-                            <span><?php echo $totalsales->total_sales; ?></span>
+                            <span><?php echo $this->sma->formatAmount($totalsales->total_sales); ?></span>
                         </h4></td>
                 </tr>
                

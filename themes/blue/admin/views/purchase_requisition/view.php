@@ -102,7 +102,7 @@
             foreach($items as $key => $item): ?>
             <tr>
                 <td><?= $item->product_name; ?></td>
-                <td><?= $item->quantity; ?></td>
+                <td><?= $this->sma->formatAmount($item->quantity); ?></td>
          
             </tr>
             <?php endforeach; ?>

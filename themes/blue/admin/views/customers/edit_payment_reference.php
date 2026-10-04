@@ -97,10 +97,10 @@ $(document).ready(function() {
                 if (r.customer_name) {
                     $('#customer-info').show();
                     $('#customer-name').text(r.customer_name);
-                    $('#credit-limit').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', r.credit_limit.toFixed(5)));
-                    $('#current-balance').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', r.current_balance.toFixed(5)));
-                    $('#remaining-limit').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', r.remaining_limit.toFixed(5)));
-                    $('#available-advance').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', r.available_advance.toFixed(5)));
+                    $('#credit-limit').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', r.credit_limit.toFixed(2)));
+                    $('#current-balance').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', r.current_balance.toFixed(2)));
+                    $('#remaining-limit').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', r.remaining_limit.toFixed(2)));
+                    $('#available-advance').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', r.available_advance.toFixed(2)));
                     $('#payment-term').text(r.payment_term || 'N/A');
                 }
             }
@@ -129,10 +129,10 @@ $(document).ready(function() {
                 tbody.append('<tr>' +
                     '<td><input type="checkbox" class="invoice-checkbox" name="invoice_ids[]" value="' + inv.id + '" data-amount="' + inv.outstanding_amount + '"' + (chk?' checked':'') + '></td>' +
                     '<td>' + inv.date + '</td><td>' + inv.reference_no + '</td><td></td>' +
-                    '<td class="text-right">' + parseFloat(inv.grand_total).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(inv.paid).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(inv.outstanding_amount).toFixed(5) + '</td>' +
-                    '<td class="text-right"><span class="invoice-payment-amount" id="invoice-payment-' + inv.id + '">' + amt + '</span>' +
+                    '<td class="text-right">' + parseFloat(inv.grand_total).toFixed(2) + '</td>' +
+                    '<td class="text-right">' + parseFloat(inv.paid).toFixed(2) + '</td>' +
+                    '<td class="text-right">' + parseFloat(inv.outstanding_amount).toFixed(2) + '</td>' +
+                    '<td class="text-right"><span class="invoice-payment-amount" id="invoice-payment-' + inv.id + '" data-value="' + amt + '">' + parseFloat(amt).toFixed(2) + '</span>' +
                     '<input type="hidden" name="invoice_amounts[' + inv.id + ']" value="' + amt + '" id="invoice-amount-' + inv.id + '"></td></tr>');
                 ta += parseFloat(inv.grand_total); tp += parseFloat(inv.paid); to += parseFloat(inv.outstanding_amount);
             });
@@ -141,7 +141,7 @@ $(document).ready(function() {
             tbody.append('<tr><td colspan="8" class="text-center">No invoices found for this customer</td></tr>');
             $('#invoices-section').show();
         }
-        $('#total-amount').text(ta.toFixed(5)); $('#total-paid').text(tp.toFixed(5)); $('#total-outstanding').text(to.toFixed(5));
+        $('#total-amount').text(ta.toFixed(2)); $('#total-paid').text(tp.toFixed(2)); $('#total-outstanding').text(to.toFixed(2));
         onSectionLoaded();
     }
 
@@ -170,10 +170,10 @@ $(document).ready(function() {
                 tbody.append('<tr>' +
                     '<td><input type="checkbox" class="return-checkbox" name="return_ids[]" value="' + r.id + '" data-amount="' + retDataAmt + '"' + (chk?' checked':'') + '></td>' +
                     '<td>' + r.date + '</td><td>' + r.reference_no + '</td><td>' + (r.type || 'return') + '</td>' +
-                    '<td class="text-right">' + parseFloat(r.grand_total).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(r.used_amount || 0).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(r.outstanding_amount || 0).toFixed(5) + '</td>' +
-                    '<td class="text-right"><span class="return-used-amount" id="return-used-' + r.id + '">' + amt + '</span>' +
+                    '<td class="text-right">' + parseFloat(r.grand_total).toFixed(2) + '</td>' +
+                    '<td class="text-right">' + parseFloat(r.used_amount || 0).toFixed(2) + '</td>' +
+                    '<td class="text-right">' + parseFloat(r.outstanding_amount || 0).toFixed(2) + '</td>' +
+                    '<td class="text-right"><span class="return-used-amount" id="return-used-' + r.id + '" data-value="' + amt + '">' + parseFloat(amt).toFixed(2) + '</span>' +
                     '<input type="hidden" name="return_amounts[' + r.id + ']" value="' + amt + '" id="return-amount-' + r.id + '"></td></tr>');
                 ta += parseFloat(r.grand_total); tp += parseFloat(r.used_amount || 0); to += parseFloat(r.outstanding_amount || 0);
             });
@@ -182,8 +182,8 @@ $(document).ready(function() {
             tbody.append('<tr><td colspan="8" class="text-center">No returns found for this customer</td></tr>');
             $('#returns-section').show();
         }
-        $('#returns-total-amount').text(ta.toFixed(5)); $('#returns-total-paid').text(tp.toFixed(5));
-        $('#returns-total-outstanding').text(to.toFixed(5)); $('#returns-total-used').text(tu.toFixed(5));
+        $('#returns-total-amount').text(ta.toFixed(2)); $('#returns-total-paid').text(tp.toFixed(2));
+        $('#returns-total-outstanding').text(to.toFixed(2)); $('#returns-total-used').text(tu.toFixed(2));
         onSectionLoaded();
     }
 
@@ -211,10 +211,10 @@ $(document).ready(function() {
                 tbody.append('<tr>' +
                     '<td><input type="checkbox" class="creditmemo-checkbox" name="creditmemo_ids[]" value="' + cm.id + '" data-amount="' + cmDataAmt + '"' + (chk?' checked':'') + '></td>' +
                     '<td>' + cm.date + '</td><td>' + cm.reference_no + '</td><td>' + cm.type + '</td>' +
-                    '<td class="text-right">' + parseFloat(cm.grand_total).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(cm.used_amount || 0).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(cm.outstanding_amount || 0).toFixed(5) + '</td>' +
-                    '<td class="text-right"><span class="creditmemo-applied-amount" id="creditmemo-applied-' + cm.id + '">' + amt + '</span>' +
+                    '<td class="text-right">' + parseFloat(cm.grand_total).toFixed(2) + '</td>' +
+                    '<td class="text-right">' + parseFloat(cm.used_amount || 0).toFixed(2) + '</td>' +
+                    '<td class="text-right">' + parseFloat(cm.outstanding_amount || 0).toFixed(2) + '</td>' +
+                    '<td class="text-right"><span class="creditmemo-applied-amount" id="creditmemo-applied-' + cm.id + '" data-value="' + amt + '">' + parseFloat(amt).toFixed(2) + '</span>' +
                     '<input type="hidden" name="creditmemo_amounts[' + cm.id + ']" value="' + amt + '" id="creditmemo-amount-' + cm.id + '"></td></tr>');
                 ta += parseFloat(cm.grand_total); tu += parseFloat(cm.used_amount || 0); tav += parseFloat(cm.outstanding_amount || 0);
             });
@@ -223,8 +223,8 @@ $(document).ready(function() {
             tbody.append('<tr><td colspan="8" class="text-center">No credit memos found for this customer</td></tr>');
             $('#creditmemo-section').show();
         }
-        $('#creditmemo-total-amount').text(ta.toFixed(5)); $('#creditmemo-total-used').text(tu.toFixed(5));
-        $('#creditmemo-total-available').text(tav.toFixed(5)); $('#creditmemo-total-applied').text(tap.toFixed(5));
+        $('#creditmemo-total-amount').text(ta.toFixed(2)); $('#creditmemo-total-used').text(tu.toFixed(2));
+        $('#creditmemo-total-available').text(tav.toFixed(2)); $('#creditmemo-total-applied').text(tap.toFixed(2));
         onSectionLoaded();
     }
 
@@ -251,10 +251,10 @@ $(document).ready(function() {
                 tbody.append('<tr>' +
                     '<td><input type="checkbox" class="serviceinvoice-checkbox" name="service_invoice_ids[]" value="' + inv.id + '" data-amount="' + inv.outstanding_amount + '"' + (chk?' checked':'') + '></td>' +
                     '<td>' + inv.date + '</td><td>' + inv.reference_no + '</td><td>' + inv.type + '</td>' +
-                    '<td class="text-right">' + parseFloat(inv.grand_total).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(inv.used_amount || 0).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(inv.outstanding_amount).toFixed(5) + '</td>' +
-                    '<td class="text-right"><span class="serviceinvoice-payment-amount" id="serviceinvoice-payment-' + inv.id + '">' + amt + '</span>' +
+                    '<td class="text-right">' + parseFloat(inv.grand_total).toFixed(2) + '</td>' +
+                    '<td class="text-right">' + parseFloat(inv.used_amount || 0).toFixed(2) + '</td>' +
+                    '<td class="text-right">' + parseFloat(inv.outstanding_amount).toFixed(2) + '</td>' +
+                    '<td class="text-right"><span class="serviceinvoice-payment-amount" id="serviceinvoice-payment-' + inv.id + '" data-value="' + amt + '">' + parseFloat(amt).toFixed(2) + '</span>' +
                     '<input type="hidden" name="service_invoice_amounts[' + inv.id + ']" value="' + amt + '" id="serviceinvoice-amount-' + inv.id + '"></td></tr>');
                 ta += parseFloat(inv.grand_total); tp += parseFloat(inv.used_amount || 0); to += parseFloat(inv.outstanding_amount);
             });
@@ -263,8 +263,8 @@ $(document).ready(function() {
             tbody.append('<tr><td colspan="8" class="text-center">No service invoices found for this customer</td></tr>');
             $('#serviceinvoice-section').show();
         }
-        $('#si-total-amount').text(ta.toFixed(5)); $('#si-total-paid').text(tp.toFixed(5));
-        $('#si-total-outstanding').text(to.toFixed(5)); $('#si-total-payment').text(tpaid.toFixed(5));
+        $('#si-total-amount').text(ta.toFixed(2)); $('#si-total-paid').text(tp.toFixed(2));
+        $('#si-total-outstanding').text(to.toFixed(2)); $('#si-total-payment').text(tpaid.toFixed(2));
         onSectionLoaded();
     }
 
@@ -292,10 +292,10 @@ $(document).ready(function() {
                 tbody.append('<tr>' +
                     '<td><input type="checkbox" class="advance-checkbox" name="advance_ids[]" value="' + adv.id + '" data-amount="' + advDataAmt + '"' + (chk?' checked':'') + '></td>' +
                     '<td>' + adv.date + '</td><td>' + adv.reference_no + '</td><td>' + (adv.type || 'advance') + '</td>' +
-                    '<td class="text-right">' + parseFloat(adv.amount).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(adv.used_amount || 0).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(adv.available_balance || 0).toFixed(5) + '</td>' +
-                    '<td class="text-right"><span class="advance-applied-amount" id="advance-applied-' + adv.id + '">' + amt + '</span>' +
+                    '<td class="text-right">' + parseFloat(adv.amount).toFixed(2) + '</td>' +
+                    '<td class="text-right">' + parseFloat(adv.used_amount || 0).toFixed(2) + '</td>' +
+                    '<td class="text-right">' + parseFloat(adv.available_balance || 0).toFixed(2) + '</td>' +
+                    '<td class="text-right"><span class="advance-applied-amount" id="advance-applied-' + adv.id + '" data-value="' + amt + '">' + parseFloat(amt).toFixed(2) + '</span>' +
                     '<input type="hidden" name="advance_amounts[' + adv.id + ']" value="' + amt + '" id="advance-amount-' + adv.id + '"></td></tr>');
                 ta += parseFloat(adv.amount); tu += parseFloat(adv.used_amount || 0); tav += parseFloat(adv.available_balance || 0);
             });
@@ -304,8 +304,8 @@ $(document).ready(function() {
             tbody.append('<tr><td colspan="8" class="text-center">No advances found for this customer</td></tr>');
             $('#advances-section').show();
         }
-        $('#advances-total-amount').text(ta.toFixed(5)); $('#advances-total-used').text(tu.toFixed(5));
-        $('#advances-total-available').text(tav.toFixed(5)); $('#advances-total-applied').text(tap.toFixed(5));
+        $('#advances-total-amount').text(ta.toFixed(2)); $('#advances-total-used').text(tu.toFixed(2));
+        $('#advances-total-available').text(tav.toFixed(2)); $('#advances-total-applied').text(tap.toFixed(2));
         onSectionLoaded();
     }
 
@@ -322,39 +322,39 @@ $(document).ready(function() {
             if (idx > -1) checkedInvoicesOrder.splice(idx, 1);
             pi.prop('disabled', true).val('');
             $('#invoice-amount-' + id).val('0.00');
-            $('#invoice-payment-' + id).text('0.00');
+            $('#invoice-payment-' + id).attr('data-value', '0').text('0.00');
         }
         calculateTotalPayment();
     });
     $(document).on('change', '.return-checkbox', function() {
         var chk = $(this).is(':checked'), id = $(this).val(), avail = parseFloat($(this).data('amount')) || 0;
-        if (chk) { $('#return-amount-' + id).val(avail.toFixed(5)); $('#return-used-' + id).text(avail.toFixed(5)); }
-        else      { $('#return-amount-' + id).val('0.00');          $('#return-used-' + id).text('0.00'); }
+        if (chk) { $('#return-amount-' + id).val(avail.toFixed(5)); $('#return-used-' + id).attr('data-value', avail.toFixed(5)).text(avail.toFixed(2)); }
+        else      { $('#return-amount-' + id).val('0.00');          $('#return-used-' + id).attr('data-value', '0').text('0.00'); }
         calculateTotalPayment();
     });
     $(document).on('change', '.creditmemo-checkbox', function() {
         var chk = $(this).is(':checked'), id = $(this).val(), avail = parseFloat($(this).data('amount')) || 0;
-        if (chk) { $('#creditmemo-amount-' + id).val(avail.toFixed(5)); $('#creditmemo-applied-' + id).text(avail.toFixed(5)); }
-        else      { $('#creditmemo-amount-' + id).val('0.00');          $('#creditmemo-applied-' + id).text('0.00'); }
+        if (chk) { $('#creditmemo-amount-' + id).val(avail.toFixed(5)); $('#creditmemo-applied-' + id).attr('data-value', avail.toFixed(5)).text(avail.toFixed(2)); }
+        else      { $('#creditmemo-amount-' + id).val('0.00');          $('#creditmemo-applied-' + id).attr('data-value', '0').text('0.00'); }
         calculateTotalPayment();
     });
     $(document).on('change', '.serviceinvoice-checkbox', function() {
         var chk = $(this).is(':checked'), id = $(this).val();
         if (chk) { if (checkedInvoicesOrder.indexOf('si_' + id) === -1) checkedInvoicesOrder.push('si_' + id); }
-        else      { var idx = checkedInvoicesOrder.indexOf('si_' + id); if (idx > -1) checkedInvoicesOrder.splice(idx, 1); $('#serviceinvoice-amount-' + id).val('0.00'); $('#serviceinvoice-payment-' + id).text('0.00'); }
+        else      { var idx = checkedInvoicesOrder.indexOf('si_' + id); if (idx > -1) checkedInvoicesOrder.splice(idx, 1); $('#serviceinvoice-amount-' + id).val('0.00'); $('#serviceinvoice-payment-' + id).attr('data-value', '0').text('0.00'); }
         calculateTotalPayment();
     });
     $(document).on('change', '.advance-checkbox', function() {
         var chk = $(this).is(':checked'), id = $(this).val(), avail = parseFloat($(this).data('amount')) || 0;
-        if (chk) { $('#advance-amount-' + id).val(avail.toFixed(5)); $('#advance-applied-' + id).text(avail.toFixed(5)); }
-        else      { $('#advance-amount-' + id).val('0.00');           $('#advance-applied-' + id).text('0.00'); }
+        if (chk) { $('#advance-amount-' + id).val(avail.toFixed(5)); $('#advance-applied-' + id).attr('data-value', avail.toFixed(5)).text(avail.toFixed(2)); }
+        else      { $('#advance-amount-' + id).val('0.00');           $('#advance-applied-' + id).attr('data-value', '0').text('0.00'); }
         calculateTotalPayment();
     });
 
     /* ── payment_amount: trigger full recalculate for proper validation ── */
     $(document).on('input blur', '#payment_amount', function() {
         var val = parseAcct($(this).val());
-        $('#payment-amount-display').text(val.toFixed(5));
+        $('#payment-amount-display').text(val.toFixed(2));
         calculateTotalPayment();
     });
 
@@ -363,11 +363,11 @@ $(document).ready(function() {
         var paymentAmount = parseAcct($('#payment_amount').val());
 
         // Reset all row amounts
-        $('.invoice-payment-amount').text('0.00');       $('[id^="invoice-amount-"]').val('0.00');
-        $('.return-used-amount').text('0.00');            $('[id^="return-amount-"]').val('0.00');
-        $('.creditmemo-applied-amount').text('0.00');     $('[id^="creditmemo-amount-"]').val('0.00');
-        $('.advance-applied-amount').text('0.00');        $('[id^="advance-amount-"]').val('0.00');
-        $('.serviceinvoice-payment-amount').text('0.00'); $('[id^="serviceinvoice-amount-"]').val('0.00');
+        $('.invoice-payment-amount').attr('data-value', '0').text('0.00');       $('[id^="invoice-amount-"]').val('0.00');
+        $('.return-used-amount').attr('data-value', '0').text('0.00');            $('[id^="return-amount-"]').val('0.00');
+        $('.creditmemo-applied-amount').attr('data-value', '0').text('0.00');     $('[id^="creditmemo-amount-"]').val('0.00');
+        $('.advance-applied-amount').attr('data-value', '0').text('0.00');        $('[id^="advance-amount-"]').val('0.00');
+        $('.serviceinvoice-payment-amount').attr('data-value', '0').text('0.00'); $('[id^="serviceinvoice-amount-"]').val('0.00');
 
         var selectedInvoices      = $('.invoice-checkbox:checked');
         var selectedServiceInvoices = $('.serviceinvoice-checkbox:checked');
@@ -405,14 +405,14 @@ $(document).ready(function() {
                     var cbSI = $('.serviceinvoice-checkbox[value="' + siId + '"]');
                     var siOut = parseFloat(cbSI.data('amount')) || 0;
                     var siApply = Math.min(siOut, remainingSettlement);
-                    $('#serviceinvoice-payment-' + siId).text(siApply.toFixed(5));
+                    $('#serviceinvoice-payment-' + siId).attr('data-value', siApply.toFixed(5)).text(siApply.toFixed(2));
                     $('#serviceinvoice-amount-'  + siId).val(siApply.toFixed(5));
                     remainingSettlement -= siApply;
                 } else {
                     var cbInv = $('.invoice-checkbox[value="' + item + '"]');
                     var invOut = parseFloat(cbInv.data('amount')) || 0;
                     var invApply = Math.min(invOut, remainingSettlement);
-                    $('#invoice-payment-' + item).text(invApply.toFixed(5));
+                    $('#invoice-payment-' + item).attr('data-value', invApply.toFixed(5)).text(invApply.toFixed(2));
                     $('#invoice-amount-'  + item).val(invApply.toFixed(5));
                     remainingSettlement -= invApply;
                 }
@@ -424,33 +424,33 @@ $(document).ready(function() {
         selectedAdvances.each(function() {
             var avail = parseFloat($(this).data('amount')) || 0;
             var amt   = Math.min(avail, priRem);
-            $('#advance-applied-' + $(this).val()).text(amt.toFixed(5));
+            $('#advance-applied-' + $(this).val()).attr('data-value', amt.toFixed(5)).text(amt.toFixed(2));
             $('#advance-amount-'  + $(this).val()).val(amt.toFixed(5));
             priRem -= amt;
         });
         selectedReturns.each(function() {
             var avail = parseFloat($(this).data('amount')) || 0;
             var amt   = Math.min(avail, priRem);
-            $('#return-used-'   + $(this).val()).text(amt.toFixed(5));
+            $('#return-used-'   + $(this).val()).attr('data-value', amt.toFixed(5)).text(amt.toFixed(2));
             $('#return-amount-' + $(this).val()).val(amt.toFixed(5));
             priRem -= amt;
         });
         selectedCreditMemos.each(function() {
             var avail = parseFloat($(this).data('amount')) || 0;
             var amt   = Math.min(avail, priRem);
-            $('#creditmemo-applied-' + $(this).val()).text(amt.toFixed(5));
+            $('#creditmemo-applied-' + $(this).val()).attr('data-value', amt.toFixed(5)).text(amt.toFixed(2));
             $('#creditmemo-amount-'  + $(this).val()).val(amt.toFixed(5));
             priRem -= amt;
         });
 
         // Update tfoot totals
-        var at = 0; $('.advance-applied-amount').each(function() { at += parseFloat($(this).text())||0; });    $('#advances-total-applied').text(at.toFixed(5));
-        var rt = 0; $('.return-used-amount').each(function() { rt += parseFloat($(this).text())||0; });        $('#returns-total-used').text(rt.toFixed(5));
-        var ct = 0; $('.creditmemo-applied-amount').each(function() { ct += parseFloat($(this).text())||0; }); $('#creditmemo-total-applied').text(ct.toFixed(5));
-        var it = 0; $('.invoice-payment-amount').each(function() { it += parseFloat($(this).text())||0; });
-        var st = 0; $('.serviceinvoice-payment-amount').each(function() { st += parseFloat($(this).text())||0; });
-        $('#total-payment-summary').text((it + st).toFixed(5));
-        $('#si-total-payment').text(st.toFixed(5));
+        var at = 0; $('.advance-applied-amount').each(function() { at += parseFloat($(this).attr('data-value') || $(this).text())||0; });    $('#advances-total-applied').text(at.toFixed(2));
+        var rt = 0; $('.return-used-amount').each(function() { rt += parseFloat($(this).attr('data-value') || $(this).text())||0; });        $('#returns-total-used').text(rt.toFixed(2));
+        var ct = 0; $('.creditmemo-applied-amount').each(function() { ct += parseFloat($(this).attr('data-value') || $(this).text())||0; }); $('#creditmemo-total-applied').text(ct.toFixed(2));
+        var it = 0; $('.invoice-payment-amount').each(function() { it += parseFloat($(this).attr('data-value') || $(this).text())||0; });
+        var st = 0; $('.serviceinvoice-payment-amount').each(function() { st += parseFloat($(this).attr('data-value') || $(this).text())||0; });
+        $('#total-payment-summary').text((it + st).toFixed(2));
+        $('#si-total-payment').text(st.toFixed(2));
 
         // Total settlement = cash + ALL selected priority items (same display formula as add page)
         var totalPaymentAmount = paymentAmount + totalPriorityAvailable;
@@ -460,13 +460,13 @@ $(document).ready(function() {
         var excessToAdvance = remainingAmount < -0.001 ? Math.abs(remainingAmount) : 0;
 
         // Update summary display
-        $('#total-outstanding-selected').text(totalInvoiceOutstanding.toFixed(5));
-        $('#priority-total-display').text(totalPriorityAvailable.toFixed(5));
-        $('#payment-amount-display').text(totalPaymentAmount.toFixed(5));   // cash + priority
-        $('#total-display').text(totalAppliedToInvoices.toFixed(5));
-        $('#advance-from-payment').text(excessToAdvance.toFixed(5));
+        $('#total-outstanding-selected').text(totalInvoiceOutstanding.toFixed(2));
+        $('#priority-total-display').text(totalPriorityAvailable.toFixed(2));
+        $('#payment-amount-display').text(totalPaymentAmount.toFixed(2));   // cash + priority
+        $('#total-display').text(totalAppliedToInvoices.toFixed(2));
+        $('#advance-from-payment').text(excessToAdvance.toFixed(2));
         $('#excess-to-advance-input').val(excessToAdvance.toFixed(5));
-        $('#remaining-amount').text(remainingAmount.toFixed(5));
+        $('#remaining-amount').text(remainingAmount.toFixed(2));
 
         updateRemainingAmountStyling(remainingAmount);
     }
@@ -474,11 +474,11 @@ $(document).ready(function() {
     /* ── Summary update for initial pre-fill (no reset) — matches add-payment logic ── */
     function updateEditSummary() {
         // Read amounts already rendered in the rows by the display functions
-        var ti = 0; $('.invoice-payment-amount').each(function() { ti += parseFloat($(this).text())||0; });
-        var ts = 0; $('.serviceinvoice-payment-amount').each(function() { ts += parseFloat($(this).text())||0; });
-        var tr = 0; $('.return-used-amount').each(function() { tr += parseFloat($(this).text())||0; });
-        var tc = 0; $('.creditmemo-applied-amount').each(function() { tc += parseFloat($(this).text())||0; });
-        var ta = 0; $('.advance-applied-amount').each(function() { ta += parseFloat($(this).text())||0; });
+        var ti = 0; $('.invoice-payment-amount').each(function() { ti += parseFloat($(this).attr('data-value') || $(this).text())||0; });
+        var ts = 0; $('.serviceinvoice-payment-amount').each(function() { ts += parseFloat($(this).attr('data-value') || $(this).text())||0; });
+        var tr = 0; $('.return-used-amount').each(function() { tr += parseFloat($(this).attr('data-value') || $(this).text())||0; });
+        var tc = 0; $('.creditmemo-applied-amount').each(function() { tc += parseFloat($(this).attr('data-value') || $(this).text())||0; });
+        var ta = 0; $('.advance-applied-amount').each(function() { ta += parseFloat($(this).attr('data-value') || $(this).text())||0; });
 
         // Outstanding of SELECTED invoices/service invoices
         var tInvOut = 0;
@@ -493,18 +493,18 @@ $(document).ready(function() {
         var excessToAdv   = diff < -0.001 ? Math.abs(diff) : 0;
 
         // Update all display fields — same semantics as add-payment page
-        $('#total-outstanding-selected').text(tInvOut.toFixed(5));
-        $('#priority-total-display').text(priority.toFixed(5));
-        $('#payment-amount-display').text(totalPayment.toFixed(5));  // cash + priority
-        $('#total-display').text(totalApplied.toFixed(5));
-        $('#advance-from-payment').text(excessToAdv.toFixed(5));
+        $('#total-outstanding-selected').text(tInvOut.toFixed(2));
+        $('#priority-total-display').text(priority.toFixed(2));
+        $('#payment-amount-display').text(totalPayment.toFixed(2));  // cash + priority
+        $('#total-display').text(totalApplied.toFixed(2));
+        $('#advance-from-payment').text(excessToAdv.toFixed(2));
         $('#excess-to-advance-input').val(excessToAdv.toFixed(5));
-        $('#total-payment-summary').text(totalApplied.toFixed(5));
-        $('#advances-total-applied').text(ta.toFixed(5));
-        $('#returns-total-used').text(tr.toFixed(5));
-        $('#creditmemo-total-applied').text(tc.toFixed(5));
-        $('#si-total-payment').text(ts.toFixed(5));
-        $('#remaining-amount').text(diff.toFixed(5));
+        $('#total-payment-summary').text(totalApplied.toFixed(2));
+        $('#advances-total-applied').text(ta.toFixed(2));
+        $('#returns-total-used').text(tr.toFixed(2));
+        $('#creditmemo-total-applied').text(tc.toFixed(2));
+        $('#si-total-payment').text(ts.toFixed(2));
+        $('#remaining-amount').text(diff.toFixed(2));
 
         updateRemainingAmountStyling(diff);
     }

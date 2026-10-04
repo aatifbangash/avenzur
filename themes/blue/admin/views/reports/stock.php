@@ -338,7 +338,7 @@
                                         <td><?= $row->batch_no ?></td>
                                         <td><?= $row->expiry ?></td>
 
-                                        <td><?= $row->quantity ?></td>
+                                        <td><?= $this->sma->formatAmount($row->quantity) ?></td>
                                         
 
                                         <td><?= number_format($row->sale_price, 2, '.', ',') ?></td>

@@ -180,7 +180,7 @@
                                                             $required_stock = ($stock->avg_last_3_months_sales / ($period)) - $stock->available_stock > 0 ? number_format((float) ($stock->avg_last_3_months_sales / ($period)) - $stock->available_stock, 2, '.', '') : '0.00';
                                                         } 
                                                     ?>
-                                                    <?= $required_stock; ?>
+                                                    <?= $this->sma->formatAmount($required_stock); ?>
                                                     
                                                 </td>
                                                 <td class="dataTables_empty"><?= isset($period) ? $period : '1'; ?> months</td>

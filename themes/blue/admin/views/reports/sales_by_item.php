@@ -162,15 +162,15 @@
                                                 <td><?= $data->name; ?></td>
                                                 <td><?= $data->transaction_date; ?></td>
                                                 <td><?= $data->id; ?></td>
-                                                <td><?= $data->quantity; ?></td>
-                                                <td><?= $data->cost_price;?> </td>
+                                                <td><?= $this->sma->formatAmount($data->quantity); ?></td>
+                                                <td><?= $this->sma->formatAmount($data->cost_price);?> </td>
                                                 <td><?= $data->cost_price * $data->quantity; ?></td>
-                                                <td><?= $data->sale_price ; ?></td>
-                                                <td><?= $data->total_sale; ?></td>
+                                                <td><?= $this->sma->formatAmount($data->sale_price) ; ?></td>
+                                                <td><?= $this->sma->formatAmount($data->total_sale); ?></td>
                                                 <td><?= round($data->item_discount, 5); ?></td>
-                                                <td><?= $data->totalbeforevat; ?></td>
-                                                <td><?= $data->tax; ?></td>
-                                                <td><?= $data->main_net; ?></td>
+                                                <td><?= $this->sma->formatAmount($data->totalbeforevat); ?></td>
+                                                <td><?= $this->sma->formatAmount($data->tax); ?></td>
+                                                <td><?= $this->sma->formatAmount($data->main_net); ?></td>
                                                 <td><?= $data->customer; ?></td>
                                                 
                                                
@@ -183,15 +183,15 @@
                             <tfoot>
                             <tr>
                                     <td colspan="6"><strong>Totals: </strong></td>
-                                    <td colspan="1"><?=$response_data['grand']->grand_quantity;?></td>
+                                    <td colspan="1"><?= $this->sma->formatAmount($response_data['grand']->grand_quantity); ?></td>
                                     <td colspan="1"></td>
-                                    <td colspan="1"><strong><?php echo $response_data['grand']->grand_cost; ?></strong></td>
+                                    <td colspan="1"><strong><?php echo $this->sma->formatAmount($response_data['grand']->grand_cost); ?></strong></td>
                                     <td colspan="1"></td>
-                                    <td colspan="1"><?=$response_data['grand']->grand_sale;?></td>
+                                    <td colspan="1"><?=$this->sma->formatAmount($response_data['grand']->grand_sale);?></td>
                                     <td colspan="1"><?=$response_data['grand']->grand_discount;?></td>
-                                    <td colspan="1"><?=$response_data['grand']->grand_beforvate;?></td>
-                                    <td colspan="1"><?=$response_data['grand']->grand_vat;?></td>
-                                    <td colspan="1"><?=$response_data['grand']->grand_main_net;?></td>
+                                    <td colspan="1"><?=$this->sma->formatAmount($response_data['grand']->grand_beforvate);?></td>
+                                    <td colspan="1"><?=$this->sma->formatAmount($response_data['grand']->grand_vat);?></td>
+                                    <td colspan="1"><?=$this->sma->formatAmount($response_data['grand']->grand_main_net);?></td>
                                     
                                 </tr>
                                

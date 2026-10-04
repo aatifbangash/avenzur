@@ -255,6 +255,15 @@ class Sma
 }
 
 
+    // Display-only: rounds numeric values to the system decimals, passes anything else through unchanged
+    public function formatAmount($number)
+    {
+        if (!is_numeric($number)) {
+            return $number;
+        }
+        return number_format($number, $this->Settings->decimals, '.', '');
+    }
+
     public function formatQuantity($number, $decimals = null)
     {
         if (!$decimals) {

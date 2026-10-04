@@ -173,13 +173,13 @@
                                                 
                                                 <td><?= $data->category_code; ?></td>
                                                 <td><?= $data->category_name; ?></td>
-                                                <td><?= $data->total_sales; ?></td>
+                                                <td><?= $this->sma->formatAmount($data->total_sales); ?></td>
                                                 <td><?= $data->sales_percentage; ?></td>
-                                                <td><?= $data->total_vat; ?></td>
-                                                <td><?= $total_returns; ?></td>
+                                                <td><?= $this->sma->formatAmount($data->total_vat); ?></td>
+                                                <td><?= $this->sma->formatAmount($total_returns); ?></td>
                                                 <td><?= $total_returns_percentage;?> </td>
-                                                <td><?= $total_return_vat; ?></td>
-                                                <td><?= $total_main_net ; ?></td>
+                                                <td><?= $this->sma->formatAmount($total_return_vat); ?></td>
+                                                <td><?= $this->sma->formatAmount($total_main_net) ; ?></td>
                                                 <td><?= $data->main_net_percentage; ?></td>
                                                 
                                                
@@ -191,7 +191,7 @@
                                     <td colspan="2"><strong>Totals: </strong></td>
                                     <td colspan="1"><strong><?= $this->sma->formatNumber($grand_sales); ?></strong></td>
                                     <td colspan="1"></td>
-                                    <td colspan="1"><strong><?= $grand_vat;?></strong></td>
+                                    <td colspan="1"><strong><?= $this->sma->formatAmount($grand_vat); ?></strong></td>
                                     <td colspan="1"><strong></strong></td>
                                     <td colspan="1"></td>
                                     <td colspan="1"></td>

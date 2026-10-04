@@ -75,7 +75,7 @@
                             <td style="text-align:center; width:25px;"><?= $r; ?></td>
                             <td style="text-align:center; width:80px; "><?= $row->transfer_date; ?></td>
                             <td style="text-align:center; width:80px; "><?= $row->id; ?></td>
-                            <td style="text-align:center; width:80px; "><?= $row->total_sales; ?></td>
+                            <td style="text-align:center; width:80px; "><?= $this->sma->formatNumber($row->total_sales); ?></td>
                            
                             <td  style="text-align:center; width:80px; "> <a href="<?= admin_url('transfers/view/' . $row->id) ?>" data-toggle="modal" data-target="#myModal2" class="tip btn btn-primary">View Breakdown</a></td>
                            
@@ -89,7 +89,7 @@
                             <td colspan="3"
                                 style="text-align:right; font-weight:bold;"><?= lang('total_amount'); ?>
                             </td>
-                            <td style="text-align:right; font-weight:bold;"><?= $grand_total; ?></td>
+                            <td style="text-align:right; font-weight:bold;"><?= $this->sma->formatNumber($grand_total); ?></td>
                         </tr>
                     </tfoot>
                 </table>

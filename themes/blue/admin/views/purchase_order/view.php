@@ -642,7 +642,7 @@
                     <td><?= $this->sma->hrld($payment->date) ?></td>
                     <td><?= $payment->reference_no; ?></td>
                     <td><?= $payment->paid_by; ?></td>
-                    <td><?= $payment->amount; ?></td>
+                    <td><?= $this->sma->formatNumber($payment->amount); ?></td>
                     <td><?= $payment->first_name . ' ' . $payment->last_name; ?></td>
                     <td><?= $payment->type; ?></td>
                   </tr>

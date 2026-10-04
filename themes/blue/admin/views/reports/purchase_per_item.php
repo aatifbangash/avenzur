@@ -252,7 +252,7 @@
                                                 <td class="text-right"><?= number_format($data->public_price, 2) ?></td>
                                                 <td class="text-right"><?= $this->sma->formatQuantity($data->qty) ?></td>
                                                 <td class="text-right"><?= number_format($data->purchase, 2) ?></td>
-                                                <td class="text-right"><?= $data->bonus ?></td>
+                                                <td class="text-right"><?= $this->sma->formatAmount($data->bonus); ?></td>
                                                 <td class="text-right"><?= isset($data->discount_percent) ? number_format($data->discount_percent, 2) . '%' : '0.00%' ?></td>
                                                 <td class="text-right"><?= number_format($data->total_discount_value, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->deal_discount_percent, 2) ?>%</td>

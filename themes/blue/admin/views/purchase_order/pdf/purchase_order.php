@@ -86,7 +86,7 @@
                                 <?= number_format($row->quantity, 2); ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
-                                <?= $row->bonus; ?>
+                                <?= $this->sma->formatAmount($row->bonus); ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
                                 <?= number_format($row->discount1, 2); ?>

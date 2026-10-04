@@ -135,8 +135,8 @@
                                         <td><?= $row->avz_item_code; ?></td>
                                         <td><?= $row->inv_date; ?></td>
                                         <td><?= $row->id; ?></td>
-                                        <td><?= $row->quantity; ?></td>
-                                        <td><?= $row->bonus; ?></td>
+                                        <td><?= $this->sma->formatAmount($row->quantity); ?></td>
+                                        <td><?= $this->sma->formatAmount($row->bonus); ?></td>
                                         <td><?= ($row->quantity + $row->bonus); ?></td>
                                         <td><?= $this->sma->formatNumber($row->purchase_price); ?></td>
                                         <td><?= $this->sma->formatNumber($row->item_discount); ?></td>

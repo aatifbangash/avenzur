@@ -135,10 +135,10 @@
                                                 <td><?= $data->product_code; ?></td>
                                                 <td><?= $data->product_name; ?></td>
                                                 <td><?= $data->invoice_number; ?></td>
-                                                <td><?= $data->quantity; ?></td>
-                                                <td><?= $data->main_net; ?></td>
-                                                <td><?= $data->commission_value; ?></td>
-                                                <td><?= $data->TotalCommission; ?></td>
+                                                <td><?= $this->sma->formatAmount($data->quantity); ?></td>
+                                                <td><?= $this->sma->formatAmount($data->main_net); ?></td>
+                                                <td><?= $this->sma->formatAmount($data->commission_value); ?></td>
+                                                <td><?= $this->sma->formatAmount($data->TotalCommission); ?></td>
                                               
                                                
                                             </tr>

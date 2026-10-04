@@ -406,7 +406,7 @@ $spi_to = min($spi_page_num * $spi_per_page, $spi_total_rows);
                                                 <td><?= $data->item_no ?></td>
                                                 <td><?= $data->item_name ?></td>
                                                 <td class="text-right"><?= $this->sma->formatQuantity($data->qty) ?></td>
-                                                <td class="text-right"><?= $data->bonus ?></td>
+                                                <td class="text-right"><?= $this->sma->formatAmount($data->bonus); ?></td>
                                                 <td class="text-right"><?= number_format($data->unit_cost, 2, '.', ',') ?></td>
                                                 <td class="text-right"><?= number_format($data->unit_price, 2, '.', ',') ?></td>
                                                 <td class="text-right"><?= number_format($data->sales, 2, '.', ',') ?></td>

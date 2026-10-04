@@ -250,8 +250,8 @@
                                     <td><?= $rp->expiry; ?></td>
                                     <td><?= $rp->batch_no; ?></td>
                                     <td><?= $this->sma->formatMoney($rp->real_unit_sale, 'none'); ?></td>
-                                    <td><?= $rp->real_unit_cost; ?></td>
-                                    <td><?= $rp->net_unit_cost; ?></td>
+                                    <td><?= $this->sma->formatAmount($rp->real_unit_cost); ?></td>
+                                    <td><?= $this->sma->formatAmount($rp->net_unit_cost); ?></td>
                                     <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
                                     <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
                                     <td><?= $this->sma->formatMoney($totalValueOfItem, 'none'); ?></td>

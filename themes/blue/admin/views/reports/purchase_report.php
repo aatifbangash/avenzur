@@ -138,7 +138,7 @@ echo admin_form_open('reports/purchase_report', $attrib);
                                             <td><?= $row['date'] ?></td>
                                             <td><?= $row['invoice_no'] ?></td>
                                             <td><?= $row['product_name'] ?></td>
-                                            <td><?= $row['quantity'] ?></td>
+                                            <td><?= $this->sma->formatAmount($row['quantity']); ?></td>
                                             <td><?= $row['batch_no'] ?></td>
                                             <td><?= $this->sma->formatMoney($row['sale_price'], 'none') ?></td>
                                             <td><?= $this->sma->formatMoney($row['purchase_price'], 'none') ?></td>
