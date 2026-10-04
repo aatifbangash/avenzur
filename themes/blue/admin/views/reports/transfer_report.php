@@ -157,7 +157,7 @@
                                     <td><?= $r['date'] ?></td>
                                     <td><?= $r['transfer_id'] ?></td>
                                     <td><?= $r['product_name'] ?></td>
-                                    <td><?= $r['quantity'] ?></td>
+                                    <td><?= $this->sma->formatAmount($r['quantity']); ?></td>
                                     <td><?= $this->sma->formatMoney($r['cost_price'], 'none') ?></td>
                                     <td><?= $this->sma->formatMoney($r['sale_price'], 'none') ?></td>
                                     <td><?= $this->sma->formatMoney($r['profit_amt'], 'none') ?></td>

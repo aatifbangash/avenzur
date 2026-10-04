@@ -115,11 +115,11 @@
                                 <tr>
                                     <td><?= $product->code ?></td>
                                     <td><?= $product->name ?></td>
-                                    <td><?= $product->incentive_qty ?></td>
-                                    <td><?= $product->incentive_value ?></td>
+                                    <td><?= $this->sma->formatAmount($product->incentive_qty); ?></td>
+                                    <td><?= $this->sma->formatAmount($product->incentive_value) ?></td>
                                     <td><?= $this->sma->formatQuantity($product->total_quantity) ?></td>
-                                    <td><?= $this->sma->formatDecimal($product->total_price) ?></td>
-                                    <td><?= $incentivePrice ?></td>
+                                    <td><?= $this->sma->formatAmount($product->total_price) ?></td>
+                                    <td><?= $this->sma->formatAmount($incentivePrice) ?></td>
                                 </tr>
                                 <?php
                             }

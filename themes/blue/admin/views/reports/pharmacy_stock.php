@@ -93,7 +93,7 @@
                                             foreach ($row['warehouses'] as $warehouse_data){
                                                 ?>
                                                     <td><?= $warehouse_data['batch_no'] ?></td>
-                                                    <td><?= $warehouse_data['quantity'] ?></td>
+                                                    <td><?= $this->sma->formatAmount($warehouse_data['quantity']); ?></td>
                                                     <td><?= $warehouse_data['expiry'] ?></td>
                                                 <?php
                                             }

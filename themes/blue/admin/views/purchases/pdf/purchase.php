@@ -82,13 +82,13 @@
                                 
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
-                                <?= $row->unit_cost; ?>
+                                <?= $this->sma->formatAmount($row->unit_cost); ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
-                                <?= $row->quantity; ?>
+                                <?= $this->sma->formatAmount($row->quantity); ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
-                                <?= $row->bonus; ?>
+                                <?= $this->sma->formatAmount($row->bonus); ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
                                 <?= $row->discount1; ?>
@@ -108,13 +108,13 @@
                             </td>
                             <?php } ?>
                              <td style="text-align:right;">
-                                <?= $row->item_tax; ?>
+                                <?= $this->sma->formatAmount($row->item_tax); ?>
                             </td>
                                <td style="text-align:right;">
-                                <?= $row->totalbeforevat; ?>
+                                <?= $this->sma->formatAmount($row->totalbeforevat); ?>
                             </td>
                                <td style="text-align:right;">
-                                <?= $row->main_net; ?>
+                                <?= $this->sma->formatAmount($row->main_net); ?>
                             </td>
                          
                            

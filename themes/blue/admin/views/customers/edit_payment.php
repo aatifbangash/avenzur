@@ -121,9 +121,9 @@
                         '<td>' + invoice.date + '</td>' +
                         '<td>' + invoice.id + '</td>' +
                         '<td>' + invoice.type + '</td>' +
-                        '<td class="text-right">' + parseFloat(invoice.grand_total).toFixed(5) + '</td>' +
-                        '<td class="text-right">' + parseFloat(invoice.total_paid).toFixed(5) + '</td>' +
-                        '<td class="text-right">' + parseFloat(invoice.outstanding_amount).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(invoice.grand_total).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(invoice.total_paid).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(invoice.outstanding_amount).toFixed(2) + '</td>' +
                         '<td class="text-right"><span class="invoice-payment-amount" id="invoice-payment-' + invoice.id + '">' + parseFloat(paidInThisPayment).toFixed(2) + '</span>' +
                         '<input type="hidden" name="invoice_amounts[' + invoice.id + ']" value="' + parseFloat(paidInThisPayment).toFixed(2) + '" id="invoice-amount-' + invoice.id + '"></td>' +
                     '</tr>';
@@ -164,9 +164,9 @@
                         '<td>' + return_item.date + '</td>' +
                         '<td>' + return_item.reference_no + '</td>' +
                         '<td>' + return_item.type + '</td>' +
-                        '<td class="text-right">' + parseFloat(return_item.grand_total).toFixed(5) + '</td>' +
-                        '<td class="text-right">' + parseFloat(return_item.total_paid || 0).toFixed(5) + '</td>' +
-                        '<td class="text-right">' + parseFloat(return_item.outstanding_amount || 0).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(return_item.grand_total).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(return_item.total_paid || 0).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(return_item.outstanding_amount || 0).toFixed(2) + '</td>' +
                         '<td class="text-right"><span class="return-used-amount" id="return-used-' + return_item.id + '">' + parseFloat(usedInThisPayment).toFixed(2) + '</span>' +
                         '<input type="hidden" name="return_amounts[' + return_item.id + ']" value="' + parseFloat(usedInThisPayment).toFixed(2) + '" id="return-amount-' + return_item.id + '"></td>' +
                     '</tr>';
@@ -206,9 +206,9 @@
                         '<td><input type="checkbox" class="creditmemo-checkbox" name="creditmemo_ids[]" value="' + creditmemo.id + '" data-amount="' + creditmemo.available_balance + '" ' + (appliedInThisPayment > 0 ? 'checked' : '') + '></td>' +
                         '<td>' + creditmemo.date + '</td>' +
                         '<td>' + creditmemo.reference_no + '</td>' +
-                        '<td class="text-right">' + parseFloat(creditmemo.grand_total).toFixed(5) + '</td>' +
-                        '<td class="text-right">' + parseFloat(creditmemo.used_amount || 0).toFixed(5) + '</td>' +
-                        '<td class="text-right">' + parseFloat(creditmemo.available_balance).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(creditmemo.grand_total).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(creditmemo.used_amount || 0).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(creditmemo.available_balance).toFixed(2) + '</td>' +
                         '<td class="text-right"><span class="creditmemo-applied-amount" id="creditmemo-applied-' + creditmemo.id + '">' + parseFloat(appliedInThisPayment).toFixed(2) + '</span>' +
                         '<input type="hidden" name="creditmemo_amounts[' + creditmemo.id + ']" value="' + parseFloat(appliedInThisPayment).toFixed(2) + '" id="creditmemo-amount-' + creditmemo.id + '"></td>' +
                     '</tr>';
@@ -248,9 +248,9 @@
                         '<td><input type="checkbox" class="serviceinvoice-checkbox" name="service_invoice_ids[]" value="' + invoice.id + '" data-amount="' + invoice.outstanding_amount + '" ' + (paidInThisPayment > 0 ? 'checked' : '') + '></td>' +
                         '<td>' + invoice.date + '</td>' +
                         '<td>' + invoice.reference_no + '</td>' +
-                        '<td class="text-right">' + parseFloat(invoice.grand_total).toFixed(5) + '</td>' +
-                        '<td class="text-right">' + parseFloat(invoice.total_paid || 0).toFixed(5) + '</td>' +
-                        '<td class="text-right">' + parseFloat(invoice.outstanding_amount).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(invoice.grand_total).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(invoice.total_paid || 0).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(invoice.outstanding_amount).toFixed(2) + '</td>' +
                         '<td class="text-right"><span class="serviceinvoice-payment-amount" id="serviceinvoice-payment-' + invoice.id + '">' + parseFloat(paidInThisPayment).toFixed(2) + '</span>' +
                         '<input type="hidden" name="service_invoice_amounts[' + invoice.id + ']" value="' + parseFloat(paidInThisPayment).toFixed(2) + '" id="serviceinvoice-amount-' + invoice.id + '"></td>' +
                     '</tr>';

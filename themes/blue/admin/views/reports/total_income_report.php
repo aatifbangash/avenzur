@@ -133,7 +133,7 @@
                                             <td><?= $this->sma->formatNumber($row->total_discount); ?></td>
                                             <td><?= $this->sma->formatNumber($row->total_net_purchase); ?></td>
                                             <td><?= $this->sma->formatNumber($row->total_sale); ?></td>
-                                            <td><?= $row->total_bonus; ?></td>
+                                            <td><?= $this->sma->formatAmount($row->total_bonus); ?></td>
                                             <td><?= $this->sma->formatNumber($net_profit); ?></td>
                                             <td><?php echo $this->sma->formatNumber(($net_profit) / ($row->total_sale)).'%'; ?></td>
                                         </tr>

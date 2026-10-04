@@ -52,7 +52,7 @@
                                                 <td><?= $memo->reference_no; ?></td>
                                                 <td><?= $memo->company; ?></td>
                                                 <td><?= !empty($memo->date) ? date('d-M-Y', strtotime($memo->date)) : '—'; ?></td>
-                                                <td><?= $memo->payment_amount; ?></td>
+                                                <td><?= $this->sma->formatNumber($memo->payment_amount); ?></td>
                                                 <td>
                                                     <?php if ($period_closed): ?>
                                                         <span class="label label-danger tip" title="AR period closed for this memo date"><i class="fa fa-lock"></i> Period Closed</span>

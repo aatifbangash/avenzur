@@ -126,9 +126,9 @@
                                                     <td><?= $row->supplier; ?></td>
                                                     <td><?= $row->product_code; ?></td>
                                                     <td><?= $row->product_name; ?></td>
-                                                    <td><?= $row->total_quantity; ?></td>
-                                                    <td><?= $row->price; ?></td>
-                                                    <td><?= $total_value; ?></td>
+                                                    <td><?= $this->sma->formatAmount($row->total_quantity); ?></td>
+                                                    <td><?= $this->sma->formatAmount($row->price); ?></td>
+                                                    <td><?= $this->sma->formatAmount($total_value); ?></td>
                                                 </tr>
                                             <?php
                                         }

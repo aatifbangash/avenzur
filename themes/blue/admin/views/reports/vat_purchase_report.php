@@ -183,8 +183,8 @@
                                                 <td><?= $total_discount;//$this->sma->formatMoney($data->total_discount,'none'); ?></td>
                                                 <td><?= $total_after_discount;//$this->sma->formatMoney($data->grand_total - $data->total_tax,'none'); ?></td>
 
-                                                <td><?= $total_tax; ?></td>
-                                                <td><?= $net_total; ?></td>
+                                                <td><?= $this->sma->formatAmount($total_tax); ?></td>
+                                                <td><?= $this->sma->formatAmount($net_total); ?></td>
 
 
 
@@ -208,7 +208,7 @@
                                     <th>&nbsp;</th>
                                     
 
-                                    <th class="text-center"><?=$grand_total_invoice;?></th>
+                                    <th class="text-center"><?= $this->sma->formatAmount($grand_total_invoice); ?></th>
                                     <th class="text-center"><?=$grand_total_discount ?></th>
                                     <th class="text-center"><?=$grand_after_discount; //$this->sma->formatMoney($totalTotalAfterDiscount,'none')?></th>
                                    

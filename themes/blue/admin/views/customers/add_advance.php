@@ -76,7 +76,7 @@
             var discount_amount = roundAmount((amount_after_returns * discount_pct) / 100);
             
             // Display the calculated discount amount
-            $row.find('.discount-amount-display').text(discount_amount.toFixed(4));
+            $row.find('.discount-amount-display').text(discount_amount.toFixed(2));
 
             // Update total payable display for this row (due - returns - discount)
             var payable_after_discount = roundAmount(amount_after_returns - discount_amount);
@@ -125,20 +125,20 @@
                 balance_due = roundAmount(total_payable - amount_received);
             }
 
-            $('#summary-total-invoice').text(total_invoice.toFixed(4));
-            $('#summary-total-returns').text(total_returns.toFixed(4));
-            $('#summary-total-discount').text(total_discount.toFixed(4));
-            $('#summary-total-payable').text(total_payable.toFixed(4));
+            $('#summary-total-invoice').text(total_invoice.toFixed(2));
+            $('#summary-total-returns').text(total_returns.toFixed(2));
+            $('#summary-total-discount').text(total_discount.toFixed(2));
+            $('#summary-total-payable').text(total_payable.toFixed(2));
             // Show amount received (cash) and indicate if advance used
             if (settle_with_advance_checked && advance_used > 0) {
                 // Display total settlement (cash + advance) to give a clearer picture
                 var total_settlement_display = roundAmount(amount_received + advance_used);
-                $('#summary-amount-received').text(total_settlement_display.toFixed(4));
+                $('#summary-amount-received').text(total_settlement_display.toFixed(2));
             } else {
-                $('#summary-amount-received').text(amount_received.toFixed(4));
+                $('#summary-amount-received').text(amount_received.toFixed(2));
             }
-            $('#summary-advance-payment').text(excess_payment.toFixed(4));
-            $('#summary-balance-due').text(balance_due.toFixed(4));
+            $('#summary-advance-payment').text(excess_payment.toFixed(2));
+            $('#summary-balance-due').text(balance_due.toFixed(2));
             
             // Update balance due color based on value
             if (balance_due === 0) {
@@ -198,8 +198,8 @@
                 var remaining_limit = credit_limit - existing_balance;
                 
                 // Update the display
-                $('#customer-current-balance').text(current_balance.toFixed(4));
-                $('#customer-remaining-limit').text(remaining_limit.toFixed(4));
+                $('#customer-current-balance').text(current_balance.toFixed(2));
+                $('#customer-remaining-limit').text(remaining_limit.toFixed(2));
                 
                 // Update color based on limit status
                 if (remaining_limit < 0) {
@@ -370,11 +370,11 @@
                             if (response.advance_ledger_configured) {
                         if (advance_balance > 0) {
                             // Customer has positive advance balance
-                            $('#advance-balance').html('<span style="color: #28a745; font-weight: bold;">' + advance_balance.toFixed(4) + '</span>');
+                            $('#advance-balance').html('<span style="color: #28a745; font-weight: bold;">' + advance_balance.toFixed(2) + '</span>');
                             $('#settle-with-advance-table').prop('disabled', false);
                         } else if (advance_balance < 0) {
                             // Customer has negative balance (owes money)
-                            $('#advance-balance').html('<span style="color: #dc3545;">Customer Owes: ' + Math.abs(advance_balance).toFixed(4) + '</span>');
+                            $('#advance-balance').html('<span style="color: #dc3545;">Customer Owes: ' + Math.abs(advance_balance).toFixed(2) + '</span>');
                             $('#settle-with-advance-table').prop('disabled', true);
                             $('#settle-with-advance-table').prop('checked', false);
                         } else {
@@ -476,9 +476,9 @@
                         // Add customer limit info row after totals row
                         var limitTr = $('<tr id="customer-limit-row" class="row" style="background-color: #e8f5e9;"></tr>');
                         var limit_html = '<td colspan="2"><b>Customer Credit Limit:</b></td>';
-                        limit_html += '<td><b style="color: #1976d2;">' + credit_limit.toFixed(4) + '</b></td>';
-                        limit_html += '<td colspan="2"><b>Current Balance:</b> <span style="color: #d32f2f;" id="customer-current-balance">' + current_balance.toFixed(4) + '</span></td>';
-                        limit_html += '<td colspan="2"><b>Remaining Limit:</b> <span style="color: #388e3c;" id="customer-remaining-limit">' + remaining_limit.toFixed(4) + '</span></td>';
+                        limit_html += '<td><b style="color: #1976d2;">' + credit_limit.toFixed(2) + '</b></td>';
+                        limit_html += '<td colspan="2"><b>Current Balance:</b> <span style="color: #d32f2f;" id="customer-current-balance">' + current_balance.toFixed(2) + '</span></td>';
+                        limit_html += '<td colspan="2"><b>Remaining Limit:</b> <span style="color: #388e3c;" id="customer-remaining-limit">' + remaining_limit.toFixed(2) + '</span></td>';
                         limitTr.html(limit_html);
                         
                         // Store credit limit and existing balance in data attributes for recalculation

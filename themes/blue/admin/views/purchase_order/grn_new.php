@@ -19,7 +19,7 @@
                             <div class="form-group">
                                 <p><strong>Supplier Name:</strong> <?php echo $po_info->supplier;?></p>
                                 <p><strong>Total PO Items:</strong> <?= $po_info->total_items; ?></p>
-                                <p><strong>Total PO Quantity:</strong> <?= $po_info->total_quantity; ?></p>
+                                <p><strong>Total PO Quantity:</strong> <?= $this->sma->formatAmount($po_info->total_quantity); ?></p>
                             </div>
                             <div class="form-row">
                                 <div class="form-group col-md-6">

@@ -1753,7 +1753,7 @@ var lang = {
                             $('#gift_card_no_' + id).parent('.form-group').addClass('has-error');
                             bootbox.alert('<?=lang('gift_card_not_for_customer')?>');
                         } else {
-                            $('#gc_details_' + id).html('<small>Card No: ' + data.card_no + '<br>Value: ' + data.value + ' - Balance: ' + data.balance + '</small>');
+                            $('#gc_details_' + id).html('<small>Card No: ' + data.card_no + '<br>Value: ' + parseFloat(data.value).toFixed(2) + ' - Balance: ' + parseFloat(data.balance).toFixed(2) + '</small>');
                             $('#gift_card_no_' + id).parent('.form-group').removeClass('has-error');
                             //calculateTotals();
                             $('#amount_' + id).val(gtotal >= data.balance ? data.balance : gtotal).focus();

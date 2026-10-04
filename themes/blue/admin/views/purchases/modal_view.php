@@ -279,7 +279,7 @@
                                 ?>
                                 <td style="text-align:right; width:100px;">
                                     <!-- <?= $row->unit_cost != $row->real_unit_cost && $row->item_discount > 0 ? '<del>' . $this->sma->formatMoney($row->real_unit_cost) . '</del>' : ''; ?> -->
-                                    <?= $row->sale_price; ?>
+                                    <?= $this->sma->formatAmount($row->sale_price); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
                                      <?= $this->sma->formatNumber($row->unit_cost); ?>

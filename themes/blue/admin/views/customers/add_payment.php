@@ -76,7 +76,7 @@
             var discount_amount = roundAmount((amount_after_returns * discount_pct) / 100);
             
             // Display the calculated discount amount
-            $row.find('.discount-amount-display').text(discount_amount.toFixed(4));
+            $row.find('.discount-amount-display').text(discount_amount.toFixed(2));
 
             // Update total payable display for this row (due - returns - discount)
             var payable_after_discount = roundAmount(amount_after_returns - discount_amount);
@@ -120,11 +120,11 @@
             // Update the totals row (find the row with "Totals:" text)
             $('#poTable tbody tr').each(function() {
                 if ($(this).find('td:first').text().trim() === 'Totals:') {
-                    $(this).find('td').eq(1).html('<b>' + total_original.toFixed(4) + '</b>');
+                    $(this).find('td').eq(1).html('<b>' + total_original.toFixed(2) + '</b>');
                     // $(this).find('td').eq(2).html('<b>' + total_due.toFixed(2) + '</b>');
-                    $(this).find('td').eq(3).html('<small style="color:#e65100;">-' + total_returns.toFixed(4) + '</small>');
-                    $(this).find('td').eq(4).html('<small style="color:#d32f2f;">-' + total_discount.toFixed(4) + '</small>');
-                    $(this).find('td').eq(6).html('<b>' + total_payment.toFixed(4) + '</b>');
+                    $(this).find('td').eq(3).html('<small style="color:#e65100;">-' + total_returns.toFixed(2) + '</small>');
+                    $(this).find('td').eq(4).html('<small style="color:#d32f2f;">-' + total_discount.toFixed(2) + '</small>');
+                    $(this).find('td').eq(6).html('<b>' + total_payment.toFixed(2) + '</b>');
                 }
             });
             
@@ -176,20 +176,20 @@
                 balance_due = roundAmount(total_payable - amount_received);
             }
 
-            $('#summary-total-invoice').text(total_invoice.toFixed(4));
-            $('#summary-total-returns').text(total_returns.toFixed(4));
-            $('#summary-total-discount').text(total_discount.toFixed(4));
-            $('#summary-total-payable').text(total_payable.toFixed(4));
+            $('#summary-total-invoice').text(total_invoice.toFixed(2));
+            $('#summary-total-returns').text(total_returns.toFixed(2));
+            $('#summary-total-discount').text(total_discount.toFixed(2));
+            $('#summary-total-payable').text(total_payable.toFixed(2));
             // Show amount received (cash) and indicate if advance used
             if (settle_with_advance_checked && advance_used > 0) {
                 // Display total settlement (cash + advance) to give a clearer picture
                 var total_settlement_display = roundAmount(amount_received + advance_used);
-                $('#summary-amount-received').text(total_settlement_display.toFixed(4));
+                $('#summary-amount-received').text(total_settlement_display.toFixed(2));
             } else {
-                $('#summary-amount-received').text(amount_received.toFixed(4));
+                $('#summary-amount-received').text(amount_received.toFixed(2));
             }
-            $('#summary-advance-payment').text(excess_payment.toFixed(4));
-            $('#summary-balance-due').text(balance_due.toFixed(4));
+            $('#summary-advance-payment').text(excess_payment.toFixed(2));
+            $('#summary-balance-due').text(balance_due.toFixed(2));
             
             // Update balance due color based on value
             if (balance_due === 0) {
@@ -249,8 +249,8 @@
                 var remaining_limit = credit_limit - existing_balance;
                 
                 // Update the display
-                $('#customer-current-balance').text(current_balance.toFixed(4));
-                $('#customer-remaining-limit').text(remaining_limit.toFixed(4));
+                $('#customer-current-balance').text(current_balance.toFixed(2));
+                $('#customer-remaining-limit').text(remaining_limit.toFixed(2));
                 
                 // Update color based on limit status
                 if (remaining_limit < 0) {
@@ -460,9 +460,9 @@
                                 var original_due = parseFloat(response[i].grand_total) - parseFloat(response[i].paid) - additional_discount;
                                 tr_html = '<td>'+purchase_date+'</td>';
                                 tr_html += '<td>'+reference_id+'</td>';
-                                tr_html += '<td>'+total_amount.toFixed(4)+'<input name="original_amount[]" data-item-id="' + response[i].id + '" value="'+total_amount.toFixed(4)+'" type="hidden" /></td>';
-                                tr_html += '<td>'+original_due.toFixed(4)+'<input name="due_amount[]" data-item-id="' + response[i].id + '" value="'+original_due.toFixed(4)+'" type="hidden" class="rid" /></td>';
-                                tr_html += '<td style="color:#e65100;">'+return_amount.toFixed(4)+'<input name="return_amount[]" data-item-id="' + response[i].id + '" value="'+return_amount.toFixed(4)+'" type="hidden" /></td>';
+                                tr_html += '<td>'+total_amount.toFixed(2)+'<input name="original_amount[]" data-item-id="' + response[i].id + '" value="'+total_amount.toFixed(4)+'" type="hidden" /></td>';
+                                tr_html += '<td>'+original_due.toFixed(2)+'<input name="due_amount[]" data-item-id="' + response[i].id + '" value="'+original_due.toFixed(4)+'" type="hidden" class="rid" /></td>';
+                                tr_html += '<td style="color:#e65100;">'+return_amount.toFixed(2)+'<input name="return_amount[]" data-item-id="' + response[i].id + '" value="'+return_amount.toFixed(4)+'" type="hidden" /></td>';
                                 tr_html += '<td><div class="input-group" style="width:120px;"><input name="additional_discount[]" data-item-id="' + response[i].id + '" type="number" step="0.01" min="0" max="100" class="form-control input-sm additional-discount-pct" style="width:80px;" value="0" placeholder="0" /><span class="input-group-addon">%</span></div><small class="discount-amount-display" style="color:#666; display:block; margin-top:2px;">0.0000</small></td>';
                                 tr_html += '<td>'+credit_period_html+'</td>';
                                 // Calculate payable after returns and discounts (initially discount is 0)
@@ -503,10 +503,10 @@
                                 var adjustable_amount = is_checked && shortage > 0 ? Math.min(shortage, current_advance_balance) : 0;
                                 
                                 var advanceAdjustTr = $('<tr id="advance-adjustment-row" class="row" style="background-color: #e3f2fd;"></tr>');
-                                var advance_adjust_html = '<td colspan="2"><b>Available Advance to Adjust:</b> <span style="color: #28a745;">' + current_advance_balance.toFixed(4) + '</span></td>';
+                                var advance_adjust_html = '<td colspan="2"><b>Available Advance to Adjust:</b> <span style="color: #28a745;">' + current_advance_balance.toFixed(2) + '</span></td>';
                                 advance_adjust_html += '<td><label class="checkbox-inline" style="margin-top: 5px;"><input type="checkbox" id="settle-with-advance-table" style="margin-right: 5px;"> Settle with Advance</label></td>';
                                 advance_adjust_html += '<td colspan="2"></td>';
-                                advance_adjust_html += '<td><b id="advance-adjustment-amount">' + adjustable_amount.toFixed(4) + '</b></td>';
+                                advance_adjust_html += '<td><b id="advance-adjustment-amount">' + adjustable_amount.toFixed(2) + '</b></td>';
                                 advanceAdjustTr.html(advance_adjust_html);
                                 advanceAdjustTr.appendTo('#poTable');
                                 
@@ -519,7 +519,7 @@
                                 var excess_amount = original_payment_amount - total_due;
                                 var excessTr = $('<tr id="excess-advance-row" class="row" style="background-color: #fff3cd;"></tr>');
                                 var excess_html = '<td colspan="5"><b>Excess Payment (Will be parked as Advance):</b></td>';
-                                excess_html += '<td colspan="2"><b id="excess-advance-amount" style="color: #856404;">' + excess_amount.toFixed(4) + '</b></td>';
+                                excess_html += '<td colspan="2"><b id="excess-advance-amount" style="color: #856404;">' + excess_amount.toFixed(2) + '</b></td>';
                                 excessTr.html(excess_html);
                                 excessTr.appendTo('#poTable');
                             }
@@ -580,11 +580,11 @@
                             if (response.advance_ledger_configured) {
                         if (advance_balance > 0) {
                             // Customer has positive advance balance
-                            $('#advance-balance').html('<span style="color: #28a745; font-weight: bold;">' + advance_balance.toFixed(4) + '</span>');
+                            $('#advance-balance').html('<span style="color: #28a745; font-weight: bold;">' + advance_balance.toFixed(2) + '</span>');
                             $('#settle-with-advance-table').prop('disabled', false);
                         } else if (advance_balance < 0) {
                             // Customer has negative balance (owes money)
-                            $('#advance-balance').html('<span style="color: #dc3545;">Customer Owes: ' + Math.abs(advance_balance).toFixed(4) + '</span>');
+                            $('#advance-balance').html('<span style="color: #dc3545;">Customer Owes: ' + Math.abs(advance_balance).toFixed(2) + '</span>');
                             $('#settle-with-advance-table').prop('disabled', true);
                             $('#settle-with-advance-table').prop('checked', false);
                         } else {
@@ -682,9 +682,9 @@
                 var total_settlement = roundAmount(cash_payment + total_advance_allocated);
 
                 // Update settlement display
-                $('#cash-payment-amount').text(cash_payment.toFixed(4));
-                $('#advance-settlement-amount').text(total_advance_allocated.toFixed(4));
-                $('#total-settlement-amount').text(total_settlement.toFixed(4));
+                $('#cash-payment-amount').text(cash_payment.toFixed(2));
+                $('#advance-settlement-amount').text(total_advance_allocated.toFixed(2));
+                $('#total-settlement-amount').text(total_settlement.toFixed(2));
                 $('#advance-settlement-info').show();
 
                 // Update the advance adjustment row in the table if it exists
@@ -699,9 +699,9 @@
                     $row.find('input[name="payment_amount[]"]').attr('data-advance', '0.0000');
                 });
                 
-                $('#cash-payment-amount').text(payment_amount.toFixed(4));
+                $('#cash-payment-amount').text(payment_amount.toFixed(2));
                 $('#advance-settlement-amount').text('0.0000');
-                $('#total-settlement-amount').text(payment_amount.toFixed(4));
+                $('#total-settlement-amount').text(payment_amount.toFixed(2));
                 $('#advance-settlement-info').hide();
 
                 // Update the advance adjustment row to show 0 when unchecked
@@ -778,7 +778,7 @@
             if (customer_advance_ledger_configured && excess_amount > 0 && total_invoice_amount > 0) {
                 var excessTr = $('<tr id="excess-advance-row" class="row" style="background-color: #fff3cd;"></tr>');
                 var excess_html = '<td colspan="3"><b>Excess Payment (Will be parked as Advance):</b></td>';
-                excess_html += '<td><b id="excess-advance-amount" style="color: #856404;">' + excess_amount.toFixed(4) + '</b></td>';
+                excess_html += '<td><b id="excess-advance-amount" style="color: #856404;">' + excess_amount.toFixed(2) + '</b></td>';
                 excessTr.html(excess_html);
                 
                 // Insert before advance adjustment row if it exists, otherwise append to table
@@ -795,7 +795,7 @@
             // Update the advance adjustment amount in the table row
             var advanceRow = $('#advance-adjustment-row');
             if (advanceRow.length > 0) {
-                advanceRow.find('#advance-adjustment-amount').text(advance_amount.toFixed(4));
+                advanceRow.find('#advance-adjustment-amount').text(advance_amount.toFixed(2));
             }
         }
 
@@ -847,9 +847,9 @@
                         // Add customer limit info row after totals row
                         var limitTr = $('<tr id="customer-limit-row" class="row" style="background-color: #e8f5e9;"></tr>');
                         var limit_html = '<td colspan="2"><b>Customer Credit Limit:</b></td>';
-                        limit_html += '<td><b style="color: #1976d2;">' + credit_limit.toFixed(4) + '</b></td>';
-                        limit_html += '<td colspan="2"><b>Current Balance:</b> <span style="color: #d32f2f;" id="customer-current-balance">' + current_balance.toFixed(4) + '</span></td>';
-                        limit_html += '<td colspan="2"><b>Remaining Limit:</b> <span style="color: #388e3c;" id="customer-remaining-limit">' + remaining_limit.toFixed(4) + '</span></td>';
+                        limit_html += '<td><b style="color: #1976d2;">' + credit_limit.toFixed(2) + '</b></td>';
+                        limit_html += '<td colspan="2"><b>Current Balance:</b> <span style="color: #d32f2f;" id="customer-current-balance">' + current_balance.toFixed(2) + '</span></td>';
+                        limit_html += '<td colspan="2"><b>Remaining Limit:</b> <span style="color: #388e3c;" id="customer-remaining-limit">' + remaining_limit.toFixed(2) + '</span></td>';
                         limitTr.html(limit_html);
                         
                         // Store credit limit and existing balance in data attributes for recalculation

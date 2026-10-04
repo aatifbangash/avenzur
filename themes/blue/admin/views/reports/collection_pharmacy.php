@@ -170,15 +170,15 @@
                                             <tr>
                                                 <td><?= $count; ?></td>
                                                 <td><?= $data->transaction_date; ?></td>
-                                                <td><?= $data->total_cash; ?></td>
-                                                <td><?= $data->total_returns; ?></td>
-                                                <td><?=  $net_cash; ?></td>
-                                                <td><?= $data->total_credit_card; ?></td>
+                                                <td><?= $this->sma->formatAmount($data->total_cash); ?></td>
+                                                <td><?= $this->sma->formatAmount($data->total_returns); ?></td>
+                                                <td><?=  $this->sma->formatAmount($net_cash); ?></td>
+                                                <td><?= $this->sma->formatAmount($data->total_credit_card); ?></td>
                                                 <td>000</td>
                                                 <td>000</td>
-                                                <td><?= $data->total_discount; ?></td>
-                                                <td><?= $total ; ?></td>
-                                                <td><?= $net_total; ?></td>
+                                                <td><?= $this->sma->formatAmount($data->total_discount); ?></td>
+                                                <td><?= $this->sma->formatAmount($total) ; ?></td>
+                                                <td><?= $this->sma->formatAmount($net_total); ?></td>
                                                 
                                                
                                             </tr>

@@ -141,9 +141,9 @@
                                                 <td><?= $data->year; ?></td>
                                                 <td><?= $data->month; ?></td>
                                                 <td><?= $data->month_name; ?></td>
-                                                <td><?= $data->total_cost; ?></td>
-                                                <td><?= $data->total_sales; ?></td>
-                                                <td><?= $data->total_profit; ?></td>
+                                                <td><?= $this->sma->formatAmount($data->total_cost); ?></td>
+                                                <td><?= $this->sma->formatAmount($data->total_sales); ?></td>
+                                                <td><?= $this->sma->formatAmount($data->total_profit); ?></td>
                                                 <td><?= $data->profit_percentage; ?></td>
                                                
                                                                 

@@ -180,7 +180,7 @@
         <!--  <?php if ($inv->paid_by == 'cash' && $inv->paid) {
             ?>
     <tr>    
-    <td colspan="2" style="text-align:left; font-weight:bold; padding-top:5px;"><?php echo $this->lang->line('paid'); ?></td><td colspan="2" style="padding-top:5px; text-align:right; font-weight:bold;"><?php echo $inv->paid; ?></td>
+    <td colspan="2" style="text-align:left; font-weight:bold; padding-top:5px;"><?php echo $this->lang->line('paid'); ?></td><td colspan="2" style="padding-top:5px; text-align:right; font-weight:bold;"><?php echo $this->sma->formatNumber($inv->paid); ?></td>
     </tr>
     <td colspan="2" style="text-align:left; font-weight:bold; padding-top:5px;"><?php echo $this->lang->line('change'); ?></td><td colspan="2" style="padding-top:5px; text-align:right; font-weight:bold;"><?php echo number_format(($inv->paid - $inv->total), 2, '.', ''); ?></td>
     </tr>
