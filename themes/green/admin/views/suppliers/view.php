@@ -24,6 +24,14 @@
                         <td><?= $supplier->name; ?></strong></td>
                     </tr>
                     <tr>
+                        <td><strong><?= lang('name_arabic'); ?></strong></td>
+                        <td><?= $supplier->name_ar; ?></strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong><?= lang('category'); ?></strong></td>
+                        <td><?= $supplier->category; ?></strong></td>
+                    </tr> 
+                    <tr>
                         <td><strong><?= lang('vat_no'); ?></strong></td>
                         <td><?= $supplier->vat_no; ?></strong></td>
                     </tr>

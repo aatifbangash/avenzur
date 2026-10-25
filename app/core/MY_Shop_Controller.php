@@ -60,6 +60,8 @@ class MY_Shop_Controller extends CI_Controller
             $this->data['loggedIn']     = $this->loggedIn;
             $this->loggedInUser         = $this->site->getUser();
             $this->data['loggedInUser'] = $this->loggedInUser;
+            $this->loggedInUserByCompany = $this->site->getUserFromCompany();
+            $this->data['loggedInUserByCompany'] = $this->loggedInUserByCompany;
             $this->Staff                = null;
             $this->data['Staff']        = $this->Staff;
             if ($this->loggedIn) {
@@ -102,6 +104,18 @@ class MY_Shop_Controller extends CI_Controller
         if ($this->session->userdata('company_id')) {
             $this->customer       = $this->site->getCompanyByID($this->session->userdata('company_id'));
             $this->customer_group = $this->shop_model->getCustomerGroup($this->customer->customer_group_id);
+            if(!$this->session->userdata('phone')){
+                $this->session->set_userdata('phone', $this->customer->phone);
+            }
+            if(!$this->session->userdata('customer_first_name')){
+                $this->session->set_userdata('customer_first_name', $this->customer->first_name);
+            }
+            if(!$this->session->userdata('customer_last_name')){
+                $this->session->set_userdata('customer_last_name', $this->customer->last_name);
+            }
+            if(!$this->session->userdata('customer_zip_code')){
+                $this->session->set_userdata('customer_zip_code', $this->customer->postal_code);
+            }
         } elseif ($this->shop_settings->warehouse) {
             $this->warehouse = $this->site->getWarehouseByID($this->shop_settings->warehouse);
         }
@@ -148,7 +162,7 @@ class MY_Shop_Controller extends CI_Controller
             $data['allCountries']  = $this->shop_model->getallCountryR();
             $data['currencies']    = $this->shop_model->getAllCurrencies();
             $data['pages']         = $this->shop_model->getAllPages();
-            $data['brands']        = $this->shop_model->getAllBrands();
+            $data['brands']        = $this->shop_model->getAllBrands($data);
             $categories            = $this->shop_model->getAllCategories();
             foreach ($categories as $category) {
                 $cat                = $category;

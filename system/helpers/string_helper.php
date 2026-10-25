@@ -302,3 +302,14 @@ if ( ! function_exists('repeater'))
 		return ($num > 0) ? str_repeat($data, $num) : '';
 	}
 }
+
+
+if ( ! function_exists('to_snake_case'))
+{
+	function to_snake_case($string)
+	{
+		$string = strtolower($string);
+		$string = preg_replace('/[^a-z0-9]+/', '_', $string);
+		return trim($string, '_');
+	}
+}

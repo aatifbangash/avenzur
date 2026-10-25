@@ -15,7 +15,7 @@
                 });
                 $.ajax({'dataType': 'json', 'type': 'POST', 'url': sSource, 'data': aoData, 'success': fnCallback});
             },
-            "aoColumns": [{"bSortable": false, "mRender": checkbox}, {"mRender": fld}, null, null, null, {"mRender": decode_html}, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
+            "aoColumns": [{"bSortable": false, "mRender": checkbox}, {"mRender": fld}, null, null, null, {"mRender": decode_html}, {"bSortable": false,"mRender": attachment}],
             'fnRowCallback': function (nRow, aData, iDisplayIndex) {
                 nRow.id = aData[0];
                 nRow.className = "adjustment_link";
@@ -78,55 +78,7 @@
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-filter"></i><?= lang('quantity_adjustments') . ' (' . ($warehouse ? $warehouse->name : lang('all_warehouses')) . ')'; ?></h2>
-        <div class="box-icon">
-            <ul class="btn-tasks">
-                <li class="dropdown">
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                        <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i>
-                    </a>
-                    <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li>
-                            <a href="<?= admin_url('products/add_adjustment') ?>">
-                                <i class="fa fa-plus-circle"></i> <?= lang('add_adjustment') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?= admin_url('products/add_adjustment_by_csv') ?>">
-                                <i class="fa fa-plus-circle"></i> <?= lang('add_adjustment_by_csv') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" id="excel" data-action="export_excel">
-                                <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_products') ?></b>"
-                                data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
-                                data-html="true" data-placement="left">
-                            <i class="fa fa-trash-o"></i> <?= lang('delete_products') ?>
-                             </a>
-                         </li>
-                    </ul>
-                </li>
-                <?php if (!empty($warehouses)) {
-                    ?>
-                    <li class="dropdown">
-                        <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip" data-placement="left" title="<?= lang('warehouses') ?>"></i></a>
-                        <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                            <li><a href="<?= admin_url('products/quantity_adjustments') ?>"><i class="fa fa-building-o"></i> <?= lang('all_warehouses') ?></a></li>
-                            <li class="divider"></li>
-                            <?php
-                            foreach ($warehouses as $warehouse) {
-                                echo '<li><a href="' . admin_url('products/quantity_adjustments/' . $warehouse->id) . '"><i class="fa fa-building"></i>' . $warehouse->name . '</a></li>';
-                            } ?>
-                        </ul>
-                    </li>
-                    <?php
-                } ?>
-            </ul>
-        </div>
+        
     </div>
     <div class="box-content">
         <div class="row">
@@ -146,12 +98,11 @@
                             <th class="col-xs-2"><?= lang('created_by'); ?></th>
                             <th><?= lang('note'); ?></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
-                            <th style="min-width:75px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="8" class="dataTables_empty"><?= lang('loading_data_from_server') ?></td>
+                            <td colspan="7" class="dataTables_empty"><?= lang('loading_data_from_server') ?></td>
                         </tr>
                         </tbody>
                         <tfoot class="dtFilter">
@@ -161,7 +112,6 @@
                             </th>
                             <th></th><th></th><th></th><th></th><th></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
-                            <th style="width:75px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </tfoot>
                     </table>

@@ -44,7 +44,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('date', 'podate'); ?>
-                                <?php echo form_input('ddate', ($_POST['ddate'] ?? ''), 'class="form-control input-tip date" id="dealdate" required="required"'); ?>
+                                <?php echo form_input('ddate', ($_POST['ddate'] ?? date("d/m/Y H:i")), 'class="form-control input-tip date" id="dealdate" required="required"'); ?>
                             </div>
                         </div>
 

@@ -120,14 +120,14 @@
                 ?>
             </div>
 
-            <!--<div class="form-group ledgers_group">
-                <?php //echo lang('Price Difference Account', 'Price Difference Account'); 
+            <div class="form-group ledgers_group">
+                <?php echo lang('Halala Account', 'Halala Account'); 
                 ?>
                 <?php
 
-                //echo form_dropdown('price_difference_ledger', $LO,'', 'id="price_difference_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                echo form_dropdown('price_difference_ledger', $LO,'', 'id="price_difference_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                 ?>
-            </div>-->
+            </div>
             <div class="form-group ledgers_group">
                 <?= lang('Vat Account', 'vat_on_sales_ledger'); ?>
                 <?php

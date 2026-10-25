@@ -22,7 +22,12 @@
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('Rasd Notifications'); ?></h2>
-
+          <div class="box-icon">
+            <ul class="btn-tasks">
+                <li class="dropdown"><a href="<?= admin_url('notifications/showUploadNotification'); ?>" data-toggle="modal"
+                                        data-target="#myModal"><i class="icon fa fa-upload"></i></a></li>
+            </ul>
+        </div>
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown"><a href="<?= admin_url('notifications/addRasdNotification'); ?>" data-toggle="modal"

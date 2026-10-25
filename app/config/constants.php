@@ -18,7 +18,7 @@ define('FILE_READ_MODE', 0644);
 define('FILE_WRITE_MODE', 0666);
 define('DIR_READ_MODE', 0755);
 define('DIR_WRITE_MODE', 0755);
-
+define('CHILD_IDS', []);
 /*
 |--------------------------------------------------------------------------
 | File Stream Modes
@@ -84,3 +84,15 @@ define('EXIT_USER_INPUT', 7); // invalid user input
 define('EXIT_DATABASE', 8); // database error
 define('EXIT__AUTO_MIN', 9); // lowest automatically-assigned error code
 define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
+
+/*
+|--------------------------------------------------------------------------
+| Loyalty Module API Configuration
+|--------------------------------------------------------------------------
+|
+| External API endpoints for Loyalty Rules Management
+| Can be configured via environment variables for different environments
+|
+*/
+define('LOYALTY_API_URL', getenv('LOYALTY_API_URL') ?: 'http://81.208.174.52:4000');
+define('LOYALTY_API_TIMEOUT', 30); // seconds

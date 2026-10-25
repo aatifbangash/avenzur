@@ -34,7 +34,9 @@
                                 <th>#</th>
                                 <th><?php echo $this->lang->line('Reference No.'); ?></th>
                                 <th><?php echo $this->lang->line('Supplier') ?></th>
+                                <th><?php echo $this->lang->line('Date') ?></th>
                                 <th><?php echo $this->lang->line('Payment Amount') ?></th>
+                                <th><?php echo $this->lang->line('Status') ?></th>
                                 <th><?php echo $this->lang->line('Actions') ?></th>
                             </tr>
                             </thead>
@@ -43,13 +45,33 @@
                                     $count = 0;
                                     foreach($debit_memo as $memo){
                                         $count++;
+                                        $period_closed = $this->period_closing_model->isPeriodClosed('ap', $memo->date);
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
                                                 <td><?= $memo->reference_no; ?></td>
                                                 <td><?= $memo->company; ?></td>
+                                                <td><?= !empty($memo->date) ? date('d-M-Y', strtotime($memo->date)) : '—'; ?></td>
                                                 <td><?= $memo->payment_amount; ?></td>
-                                                <td><a href="<?php echo admin_url('suppliers/edit_debit_memo/' . $memo->id); ?>" class="tip" title="Edit Debit Memo"><i class="fa fa-edit"></i></a></td>
+                                                <td>
+                                                    <?php if ($period_closed): ?>
+                                                        <span class="label label-danger tip" title="AP period closed for this memo date"><i class="fa fa-lock"></i> Period Closed</span>
+                                                    <?php else: ?>
+                                                        <span class="label label-info">Open</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <a href="<?php echo admin_url('suppliers/view_debit_memo/' . $memo->id); ?>" class="tip" title="View Debit Memo"><i class="fa fa-eye"></i></a>
+                                                    <?php
+                                                    $memo_paid = !empty($memo->payment_count) || (float)($memo->used_amount ?? 0) > 0;
+                                                    if (!$period_closed && !$memo_paid):
+                                                    ?>
+                                                    <a href="<?php echo admin_url('suppliers/edit_debit_memo/' . $memo->id); ?>" class="tip" title="Edit Debit Memo"><i class="fa fa-edit"></i></a>
+                                                    <a href="<?php echo admin_url('suppliers/delete_debit_memo/' . $memo->id); ?>" class="tip" title="Delete Debit Memo" onclick="return confirm('Are you sure you want to delete this debit memo?');"><i class="fa fa-trash"></i></a>
+                                                    <?php elseif (!$period_closed && $memo_paid): ?>
+                                                    <span class="tip" title="Cannot edit — payment recorded against this memo"><i class="fa fa-edit text-muted"></i></span>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                         <?php
                                     }

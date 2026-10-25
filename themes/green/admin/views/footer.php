@@ -55,9 +55,11 @@ $s2_file_date = $this->parser->parse_string($s2_lang_file, $s2_data, true);
 <?= ($m == 'returns' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/returns.js"></script>' : ''; ?>
 
 <?= ($m == 'returns_supplier' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/returns_supplier.js"></script>' : ''; ?>
-
+<?= ($m == 'products' && ($v == 'add_bundle' || $v == 'edit_bundle')) ? '<script type="text/javascript" src="' . $assets . 'js/bundle.js"></script>' : ''; ?>
+<?= ($m == 'products' && ($v == 'add_combo' || $v == 'edit_combo')) ? '<script type="text/javascript" src="' . $assets . 'js/combo.js"></script>' : ''; ?>
 <?= ($m == 'quotes' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/quotes.js"></script>' : ''; ?>
 <?= ($m == 'products' && ($v == 'add_adjustment' || $v == 'edit_adjustment')) ? '<script type="text/javascript" src="' . $assets . 'js/adjustments.js"></script>' : ''; 
+  
 if($m == 'deals')
 {
     echo '<script>
@@ -294,5 +296,10 @@ $(document).ready(function() {
 </script>
 <?= (DEMO) ? '<script src="' . $assets . 'js/ppp_ad.min.js"></script>' : ''; ?>
 <script type="text/javascript" src="<?= base_url('assets/custom/custom.js') ?>"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+<script src="<?=$assets?>js/Amiri-Regular-normal.js"></script>
 </body>
 </html>
